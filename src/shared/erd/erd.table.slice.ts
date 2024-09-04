@@ -8,6 +8,8 @@ interface ColumnType {
 };
   
 interface TableType {
+  positionX: number,
+  positionY: number,
   name: string,
   mainColumn: ColumnType,
   childColumns: Array<ColumnType>,
@@ -15,14 +17,32 @@ interface TableType {
 
 export interface TableSlice {
   tables: Array<TableType>,
-  addChild: () => void,
+  addTable: () => void,
 };
 
-const defaultState: Array<TableType> = [];
+const defaultState: Array<TableType> = [
+  {
+    positionX: 100,
+    positionY: 200,
+    name: 'employee',
+    mainColumn: {
+      name: 'main',
+      pk: false,
+      fk: false,
+      nullable: false,
+    },
+    childColumns: [{
+      name: 'main',
+      pk: false,
+      fk: false,
+      nullable: false,
+    },],
+  }
+];
 
 export const createTableSlice: StateCreator<TableSlice, [], [], TableSlice> = (set, get) => ({
   tables: defaultState,
-  addChild: () => {
+  addTable: () => {
 
   },
 });

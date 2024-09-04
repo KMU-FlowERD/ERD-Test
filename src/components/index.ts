@@ -1,1 +1,1 @@
-export * from "./table-template";
+export * from "./table";
