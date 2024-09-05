@@ -78,29 +78,30 @@ const styles = {
     background: rgba(34, 34, 34, 0.70);
     flex-direction: column;
     padding: 5px;
+    font-size: 12px;
+    color: #ededed;
+    cursor: pointer;
 
-     &::before {
+    &::before {
       content: ${({$name}) => `"${$name}"`};
       position: absolute;
       left: 3px;
       top: -20px;
-      font-size: 12px;
-      color: #ededed;
+    }
+
+    &:hover {
+      color: #fff;
     }
   `,
   mainColumnWrapper: styled.div`
     display:flex;
     border-bottom: 1px solid #ededed;
     padding-bottom: 4px;
-    font-size: 12px;
-    color: #ededed;
     margin: 2px;
   `,
   childColumnWrapper: styled.div`
     display:flex;
     margin: 2px;
-    font-size: 12px;
-    color: #ededed;
   `,
   extraWrapper: styled.div`
     display: flex;
@@ -109,18 +110,12 @@ const styles = {
     margin-left: 40px;
   `,
   pkStyle: styled.div`
-    font-size: 12px;
-    color: #ededed;
     width: 20px;
   `,
   fkStyle: styled.div`
-    font-size: 12px;
-    color: #ededed;
     width: 20px;
   `,
   nullableStyle: styled.div`
-    font-size: 12px;
-    color: #ededed;
     width: 60px;
   `,
 }
