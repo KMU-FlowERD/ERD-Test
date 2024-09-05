@@ -1,7 +1,9 @@
 "use client";
 
 import { ColumnType } from "@/shared/column";
+import { useErdStore } from "@/shared/erd";
 import styled from "@emotion/styled";
+import { useRef } from "react";
 
 interface Position {
   x: number,
@@ -19,12 +21,33 @@ export function Table ({
   mainColumn: ColumnType,
   childColumns: Array<ColumnType>,
 }) {
-  console.log(pos);
-  return <styles.displayWrapper $name={name} $pos={pos}>
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const {clickPosition, setPos, addLine} = useErdStore();
+
+  const tableClicked = () => {
+    if(boxRef.current && clickPosition.positionX != 0) {
+      const rect = boxRef.current.getBoundingClientRect();
+
+      addLine(
+        clickPosition.positionX,
+        clickPosition.positionY,
+        pos.x + rect.width/2,
+        pos.y + rect.height / 2
+      ); // 저장되어 있던 위치와 현재 선택한 위치를 이어주는 라인 추가
+
+      setPos(0, 0); // 다시 0으로 돌아와서 새로운 라인 생성
+    } else if(boxRef.current && clickPosition.positionX == 0) {
+      const rect = boxRef.current.getBoundingClientRect();
+
+      setPos(pos.x + rect.width/2, pos.y + rect.height / 2); // 테이블의 가운데 Position 저장
+    }
+  }
+
+  return <styles.displayWrapper ref={boxRef} onClick={tableClicked} $name={name} $pos={pos}>
     <Column column={mainColumn} title={true}/>
     {
       childColumns.map((column, index) => {
-        return <Column column={column} title={false}/>
+        return <Column key={index} column={column} title={false}/>
       })
     }
   </ styles.displayWrapper>

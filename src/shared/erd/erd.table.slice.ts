@@ -19,8 +19,6 @@ const defaultState: Array<TableType> = [];
 export const createTableSlice: StateCreator<TableSlice, [], [], TableSlice> = (set, get) => ({
   tables: defaultState,
   addTable: (x: number, y: number) => {
-    console.log(x, y);
-
     const newTable = {
       positionX: x,
       positionY: y,
@@ -50,6 +48,5 @@ export const createTableSlice: StateCreator<TableSlice, [], [], TableSlice> = (s
     const tables = get();
     tables.tables.push(newTable);
     set({tables:tables.tables});
-    console.log(tables);
   },
 });
