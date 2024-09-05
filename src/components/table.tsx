@@ -19,7 +19,8 @@ export function Table ({
   mainColumn: ColumnType,
   childColumns: Array<ColumnType>,
 }) {
-  return <styles.displayWrapper $name={name}>
+  console.log(pos);
+  return <styles.displayWrapper $name={name} $pos={pos}>
     <Column column={mainColumn} title={true}/>
     {
       childColumns.map((column, index) => {
@@ -67,10 +68,10 @@ function Column({column, title} : {column: ColumnType, title: boolean}) {
 }
 
 const styles = {
-  displayWrapper: styled.div<{$name: string}>`
-    position: relative;
-    left: 100px;
-    top: 300px;
+  displayWrapper: styled.div<{$name: string, $pos: Position}>`
+    position: absolute;
+    left: ${({$pos}) => `${$pos.x}px`};
+    top: ${({$pos}) => `${$pos.y}px`};
     display: inline flex;
     border-radius: 16px;
     border: 0.5px solid #606060;

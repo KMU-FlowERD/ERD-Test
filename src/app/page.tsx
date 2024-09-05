@@ -7,7 +7,13 @@ import {useErdStore} from "@/shared/erd";
 export default function Home() {
   const {tables, addTable} = useErdStore();
 
-  return <styles.displayWrapper>
+  const displayClicked = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const {pageX, pageY} = event;
+    
+    addTable(pageX, pageY);
+  };
+
+  return <styles.displayWrapper onDoubleClick={displayClicked}>
     {
       tables.map((table, index) => {
         return <Table
@@ -24,6 +30,7 @@ export default function Home() {
 
 const styles = {
   displayWrapper: styled.div`
+    position: relative;
     height: 100vh;
     background: #2f2f2f;
   `
