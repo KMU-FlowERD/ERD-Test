@@ -24,8 +24,6 @@ export default function Home() {
 
 const styles = {
   displayWrapper: styled.div`
-    display: relative;
-    width: 100%;
     height: 100vh;
     background: #2f2f2f;
   `

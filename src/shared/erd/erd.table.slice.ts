@@ -1,11 +1,5 @@
 import { StateCreator } from 'zustand'
-
-interface ColumnType {
-  name: string,
-  pk: boolean,
-  fk: boolean,
-  nullable: boolean,
-};
+import { ColumnType } from '@/shared/column';
   
 interface TableType {
   positionX: number,
@@ -27,16 +21,24 @@ const defaultState: Array<TableType> = [
     name: 'employee',
     mainColumn: {
       name: 'main',
-      pk: false,
+      pk: true,
       fk: false,
       nullable: false,
     },
-    childColumns: [{
-      name: 'main',
-      pk: false,
-      fk: false,
-      nullable: false,
-    },],
+    childColumns: [
+      {
+        name: 'child',
+        pk: false,
+        fk: true,
+        nullable: false,
+      },
+      {
+        name: 'child',
+        pk: false,
+        fk: true,
+        nullable: true,
+      },
+    ],
   }
 ];
 
