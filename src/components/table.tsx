@@ -11,35 +11,33 @@ interface Position {
 }
 
 export function Table ({
+  index,
   pos,
   name,
   mainColumn,
   childColumns,
 }:{
+  index: number,
   pos: Position,
   name: string,
   mainColumn: ColumnType,
   childColumns: Array<ColumnType>,
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const {clickPosition, setPos, addLine} = useErdStore();
+  const {clickPosition, setRect, setPos, connectTable, addLine} = useErdStore();
 
   const tableClicked = () => {
     if(boxRef.current && clickPosition.positionX != 0) {
       const rect = boxRef.current.getBoundingClientRect();
 
-      addLine(
-        clickPosition.positionX,
-        clickPosition.positionY,
-        pos.x + rect.width/2,
-        pos.y + rect.height / 2
-      ); // 저장되어 있던 위치와 현재 선택한 위치를 이어주는 라인 추가
-
-      setPos(0, 0); // 다시 0으로 돌아와서 새로운 라인 생성
+      setRect(index, rect.width, rect.height);// 테이블의 크기 저장
+      connectTable(clickPosition.index, index);
+      setPos(0, 0, 0, 0, 0); // 다시 0으로 돌아와서 새로운 라인 생성 준비
     } else if(boxRef.current && clickPosition.positionX == 0) {
       const rect = boxRef.current.getBoundingClientRect();
 
-      setPos(pos.x + rect.width/2, pos.y + rect.height / 2); // 테이블의 가운데 Position 저장
+      setRect(index, rect.width, rect.height);
+      setPos(pos.x + rect.width/2, pos.y + rect.height / 2, rect.width, rect.height, index); // 테이블의 가운데 Position과 크기 저장
     }
   }
 

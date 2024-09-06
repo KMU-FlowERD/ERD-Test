@@ -3,6 +3,7 @@
 import { Table } from "@/components";
 import styled from "@emotion/styled";
 import {useErdStore} from "@/shared/erd";
+import { ConnectLine } from "@/components/connect-line";
 
 export default function Home() {
   const {tables, lines, addTable} = useErdStore();
@@ -18,6 +19,7 @@ export default function Home() {
       tables.map((table, index) => {
         return <Table
           key={index}
+          index={table.index}
           pos={{x: table.positionX, y: table.positionY}}
           name={table.name}
           mainColumn={table.mainColumn}
@@ -25,13 +27,7 @@ export default function Home() {
         />;
       })
     }
-    <svg width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg">
-      {
-        lines.map((line, index) => {
-          return <line x1={line.x1} x2={line.x2} y1={line.y1} y2={line.y2} stroke="#ededed" stroke-width="1"/>
-        })
-      }
-    </svg>
+    <ConnectLine />
   </ styles.displayWrapper>;
 }
 
