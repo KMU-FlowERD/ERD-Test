@@ -1,6 +1,13 @@
 import { StateCreator } from 'zustand'
 import { ColumnType } from '@/shared/column';
   
+interface LineCount {
+  top: number,
+  bottom: number,
+  left: number,
+  right: number,
+}
+
 interface TableType {
   index: number,
   connectIndex: Array<number>,
