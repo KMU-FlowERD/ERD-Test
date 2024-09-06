@@ -24,7 +24,7 @@ export function Table ({
   childColumns: Array<ColumnType>,
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const {clickPosition, setRect, setPos, connectTable, addLine} = useErdStore();
+  const {clickPosition, setRect, setPos, connectTable, setLines} = useErdStore();
 
   const tableClicked = () => {
     if(boxRef.current && clickPosition.positionX != 0) {
@@ -33,6 +33,7 @@ export function Table ({
       setRect(index, rect.width, rect.height);// 테이블의 크기 저장
       connectTable(clickPosition.index, index);
       setPos(0, 0, 0, 0, 0); // 다시 0으로 돌아와서 새로운 라인 생성 준비
+      setLines(); // 라인 초기화
     } else if(boxRef.current && clickPosition.positionX == 0) {
       const rect = boxRef.current.getBoundingClientRect();
 
