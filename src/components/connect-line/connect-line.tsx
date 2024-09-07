@@ -6,10 +6,10 @@ export function ConnectLine() {
   return <svg width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg">
     {
       lines.map((line, index) => {
-        return <line x1={line.x1} 
-            y1={line.y1} 
-            x2={line.x2} 
-            y2={line.y2} 
+        return <line x1={line.startX} 
+            y1={line.startY} 
+            x2={line.endX} 
+            y2={line.endY} 
             stroke="#ededed"
             stroke-width="1"
         />;

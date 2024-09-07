@@ -2,10 +2,17 @@ import { StateCreator } from 'zustand';
 import { TableSlice } from './erd.table.slice';
 
 interface LineType {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}
+
+interface LineCount {
+  top: number,
+  bottom: number,
+  left: number,
+  right: number,
 }
 
 export interface LineSlice {
@@ -19,24 +26,67 @@ export const createLineSlice: StateCreator<LineSlice & TableSlice, [], [], LineS
   lines: defaultState,
   setLines: () => {
     const tables = get().tables;
+
+    const tableLineCount: Array<LineCount> = tables.map(()=>{return {top: 0, bottom: 0, left: 0, right: 0}});
+
     const lines: Array<LineType> = [];
 
-    tables.forEach((startTable) => {
-      startTable.connectIndex.forEach((connect) => {
-        const endTable = tables[connect];
+    tables.forEach((startTable, startIndex) => {
+      startTable.connectIndex.forEach((endIndex) => {
+        const endTable = tables[endIndex];
 
         const startX = startTable.positionX + startTable.width / 2;
         const startY = startTable.positionY + startTable.height / 2;
         const endX = endTable.positionX + endTable.width / 2;
         const endY = endTable.positionY + endTable.height / 2;
 
-        const angle = calculateAngle({ x1: startX, x2: endX, y1: startY, y2: endY });
+        const angle = calculateAngle({ startX: startX, startY: startY, endX: endX, endY: endY });
 
-        if ([0, 90, 180, 270].includes(angle)) {
-          lines.push(getStraightLine(angle, startX, startY, endX, endY, startTable, endTable));
-        } else {
-          linePush(lines, angle, startTable, endTable, startX, startY, endX, endY);
+        const {startDirection, endDirection} = getDirection(angle, startTable, endTable);
+        
+        if(startDirection == Direction.TOP) {
+          tables[startIndex].connectDirection.top += 1;
+        } else if(startDirection == Direction.BOTTOM) {
+          tables[startIndex].connectDirection.bottom += 1;
+        } else if(startDirection == Direction.LEFT) {
+          tables[startIndex].connectDirection.left += 1;
+        } else if(startDirection == Direction.RIGHT) {
+          tables[startIndex].connectDirection.right += 1;
         }
+
+        if(endDirection == Direction.TOP) {
+          tables[endIndex].connectDirection.top += 1;
+        } else if(endDirection == Direction.BOTTOM) {
+          tables[endIndex].connectDirection.bottom += 1;
+        } else if(endDirection == Direction.LEFT) {
+          tables[endIndex].connectDirection.left += 1;
+        } else if(endDirection == Direction.RIGHT) {
+          tables[endIndex].connectDirection.right += 1;
+        }
+      });
+    });
+
+    tables.forEach((startTable, startIndex) => {
+      startTable.connectIndex.forEach((endIndex) => {
+        const endTable = tables[endIndex];
+
+        const startX = startTable.positionX + startTable.width / 2;
+        const startY = startTable.positionY + startTable.height / 2;
+        const endX = endTable.positionX + endTable.width / 2;
+        const endY = endTable.positionY + endTable.height / 2;
+
+        const angle = calculateAngle({ startX: startX, startY: startY, endX: endX, endY: endY });
+
+        linePush(
+          lines, 
+          angle, 
+          startTable, 
+          endTable, 
+          {startX, startY, endX, endY},
+          tableLineCount,
+          startIndex,
+          endIndex
+        );
       });
     });
 
@@ -51,62 +101,76 @@ enum Direction {
   RIGHT,
 }
 
-function getStraightLine(angle: number, startX: number, startY: number, endX: number, endY: number, startTable: any, endTable: any): LineType {
-  switch (angle) {
-    case 0:
-      return { x1: startX + startTable.width / 2, y1: startY, x2: endX - endTable.width / 2, y2: endY };
-    case 90:
-      return { x1: startX, y1: startY - startTable.height / 2, x2: endX, y2: endY + endTable.height / 2 };
-    case 180:
-      return { x1: startX - startTable.width / 2, y1: startY, x2: endX + endTable.width / 2, y2: endY };
-    case 270:
-      return { x1: startX, y1: startY + startTable.height / 2, x2: endX, y2: endY - endTable.height / 2 };
-    default:
-      throw new Error('Invalid angle');
-  }
-}
-
 function linePush(
   lines: Array<LineType>,
   angle: number,
-  startTable: { width: number; height: number },
-  endTable: { width: number; height: number },
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number
+  startTable: { width: number; height: number, connectDirection: LineCount },
+  endTable: { width: number; height: number, connectDirection: LineCount },
+  line: LineType,
+  tableLineCount: Array<LineCount>,
+  startIndex: number,
+  endIndex: number,
 ) {
   const { startDirection, endDirection, updatedStart, updatedEnd } = getLineDirectionsAndPositions(
     angle,
     startTable,
     endTable,
-    startX,
-    startY,
-    endX,
-    endY
+    line,
   );
 
-  startX = updatedStart.x;
-  startY = updatedStart.y;
-  endX = updatedEnd.x;
-  endY = updatedEnd.y;
+  line.startX = updatedStart.x;
+  line.startY = updatedStart.y;
+  line.endX = updatedEnd.x;
+  line.endY = updatedEnd.y;
 
-  const deltaX = endX - startX;
-  const deltaY = endY - startY;
+  if(startDirection == Direction.TOP) {
+    tableLineCount[startIndex].top += 1;
+    line.startX -= startTable.width / 2;
+    line.startX += startTable.width / (startTable.connectDirection.top+1) * tableLineCount[startIndex].top
+  } else if(startDirection == Direction.BOTTOM) {
+    tableLineCount[startIndex].bottom += 1;
+    line.startX -= startTable.width / 2;
+    line.startX += startTable.width / (startTable.connectDirection.bottom+1) * tableLineCount[startIndex].bottom
+  } else if(startDirection == Direction.LEFT) {
+    tableLineCount[startIndex].left += 1;
+    line.startY -= startTable.height / 2;
+    line.startY += startTable.height / (startTable.connectDirection.left+1) * tableLineCount[startIndex].left
+  } else if(startDirection == Direction.RIGHT) {
+    tableLineCount[startIndex].right += 1;
+    line.startY -= startTable.height/2;
+    line.startY += startTable.height / (startTable.connectDirection.right+1) * tableLineCount[startIndex].right
+  }
 
-  const drawLines: Array<LineType> = getDrawLines(startDirection, endDirection, startX, startY, endX, endY, deltaX, deltaY);
+  if(endDirection == Direction.TOP) {
+    tableLineCount[endIndex].top += 1;
+    line.startX -= endTable.width / 2;
+    line.startX += endTable.width / (endTable.connectDirection.top+1) * tableLineCount[endIndex].top
+  } else if(endDirection == Direction.BOTTOM) {
+    tableLineCount[endIndex].bottom += 1;
+    line.startX -= endTable.width / 2;
+    line.startX += endTable.width / (endTable.connectDirection.bottom+1) * tableLineCount[endIndex].bottom
+  } else if(endDirection == Direction.LEFT) {
+    tableLineCount[endIndex].left += 1;
+    line.startY -= endTable.height / 2;
+    line.startY += endTable.height / (endTable.connectDirection.left+1) * tableLineCount[endIndex].left
+  } else if(endDirection == Direction.RIGHT) {
+    tableLineCount[endIndex].right += 1;
+    line.startY -= endTable.height/2;
+    line.startY += endTable.height / (endTable.connectDirection.right+1) * tableLineCount[endIndex].right
+  }
+
+  const deltaX = line.endX - line.startX;
+  const deltaY = line.endY - line.startY;
+
+  const drawLines: Array<LineType> = getDrawLines(startDirection, endDirection, line, deltaX, deltaY);
 
   drawLines.forEach((line) => lines.push(line));
 }
 
-function getLineDirectionsAndPositions(
+function getDirection(
   angle: number,
   startTable: { width: number; height: number },
   endTable: { width: number; height: number },
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number
 ) {
   const tanAngle = Math.tan(getRadian(angle));
   const startAspect = startTable.height / startTable.width;
@@ -115,7 +179,7 @@ function getLineDirectionsAndPositions(
   let startDirection: Direction;
   let endDirection: Direction;
 
-  if (angle < 90) {
+  if (angle <= 90) {
     if (tanAngle < startAspect) {
       startDirection = Direction.RIGHT;
       endDirection = tanAngle < endAspect ? Direction.LEFT : Direction.BOTTOM;
@@ -123,7 +187,7 @@ function getLineDirectionsAndPositions(
       startDirection = Direction.TOP;
       endDirection = tanAngle < endAspect ? Direction.LEFT : Direction.BOTTOM;
     }
-  } else if (angle < 180) {
+  } else if (angle <= 180) {
     if (tanAngle > -startAspect) {
       startDirection = Direction.LEFT;
       endDirection = tanAngle > -endAspect ? Direction.RIGHT : Direction.BOTTOM;
@@ -131,7 +195,7 @@ function getLineDirectionsAndPositions(
       startDirection = Direction.TOP;
       endDirection = tanAngle > -endAspect ? Direction.RIGHT : Direction.BOTTOM;
     }
-  } else if (angle < 270) {
+  } else if (angle <= 270) {
     if (tanAngle < startAspect) {
       startDirection = Direction.LEFT;
       endDirection = tanAngle < endAspect ? Direction.RIGHT : Direction.TOP;
@@ -149,8 +213,58 @@ function getLineDirectionsAndPositions(
     }
   }
 
-  const updatedStart = {x: startX, y: startY};
-  const updatedEnd = {x: endX, y: endY};
+  return {startDirection: startDirection, endDirection: endDirection};
+}
+
+function getLineDirectionsAndPositions(
+  angle: number,
+  startTable: { width: number; height: number },
+  endTable: { width: number; height: number },
+  line: LineType
+) {
+  const tanAngle = Math.tan(getRadian(angle));
+  const startAspect = startTable.height / startTable.width;
+  const endAspect = endTable.height / endTable.width;
+
+  let startDirection: Direction;
+  let endDirection: Direction;
+
+  if (angle <= 90) {
+    if (tanAngle < startAspect) {
+      startDirection = Direction.RIGHT;
+      endDirection = tanAngle < endAspect ? Direction.LEFT : Direction.BOTTOM;
+    } else {
+      startDirection = Direction.TOP;
+      endDirection = tanAngle < endAspect ? Direction.LEFT : Direction.BOTTOM;
+    }
+  } else if (angle <= 180) {
+    if (tanAngle > -startAspect) {
+      startDirection = Direction.LEFT;
+      endDirection = tanAngle > -endAspect ? Direction.RIGHT : Direction.BOTTOM;
+    } else {
+      startDirection = Direction.TOP;
+      endDirection = tanAngle > -endAspect ? Direction.RIGHT : Direction.BOTTOM;
+    }
+  } else if (angle <= 270) {
+    if (tanAngle < startAspect) {
+      startDirection = Direction.LEFT;
+      endDirection = tanAngle < endAspect ? Direction.RIGHT : Direction.TOP;
+    } else {
+      startDirection = Direction.BOTTOM;
+      endDirection = tanAngle < endAspect ? Direction.RIGHT : Direction.TOP;
+    }
+  } else {
+    if (tanAngle > -startAspect) {
+      startDirection = Direction.RIGHT;
+      endDirection = tanAngle > -endAspect ? Direction.LEFT : Direction.TOP;
+    } else {
+      startDirection = Direction.BOTTOM;
+      endDirection = tanAngle > -endAspect ? Direction.LEFT : Direction.TOP;
+    }
+  }
+
+  const updatedStart = {x: line.startX, y: line.startY};
+  const updatedEnd = {x: line.endX, y: line.endY};
 
   if(startDirection === Direction.RIGHT) {
     updatedStart.x += startTable.width/2;
@@ -178,41 +292,43 @@ function getLineDirectionsAndPositions(
 function getDrawLines(
   startDirection: Direction,
   endDirection: Direction,
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number,
+  line: LineType,
   deltaX: number,
   deltaY: number
 ): Array<LineType> {
   const lines: Array<LineType> = [];
 
+  const startX = line.startX;
+  const startY = line.startY;
+  const endX = line.endX;
+  const endY = line.endY;
+
   if ((startDirection === Direction.TOP && endDirection === Direction.BOTTOM) || (startDirection === Direction.BOTTOM && endDirection === Direction.TOP)) {
-    lines.push({ x1: startX, y1: startY, x2: startX, y2: startY + deltaY / 2 });
-    lines.push({ x1: startX, y1: startY + deltaY / 2, x2: endX, y2: startY + deltaY / 2 });
-    lines.push({ x1: endX, y1: startY + deltaY / 2, x2: endX, y2: endY });
+    lines.push({ startX: startX, startY: startY, endX: startX, endY: startY + deltaY / 2 });
+    lines.push({ startX: startX, startY: startY + deltaY / 2, endX: endX, endY: startY + deltaY / 2 });
+    lines.push({ startX: endX, startY: startY + deltaY / 2, endX: endX, endY: endY });
   } else if ((startDirection === Direction.TOP && endDirection !== Direction.BOTTOM) || (startDirection === Direction.BOTTOM && endDirection !== Direction.TOP)) {
-    lines.push({ x1: startX, y1: startY, x2: startX, y2: startY + deltaY / 2});
-    lines.push({ x1: startX, y1: startY + deltaY / 2, x2: startX + deltaX / 2, y2: startY + deltaY / 2});
-    lines.push({ x1: startX + deltaX / 2, y1: startY + deltaY / 2, x2: startX + deltaX / 2, y2: endY });
-    lines.push({ x1: startX + deltaX / 2, y1: endY, x2: endX, y2: endY });
+    lines.push({ startX: startX, startY: startY, endX: startX, endY: startY + deltaY / 2});
+    lines.push({ startX: startX, startY: startY + deltaY / 2, endX: startX + deltaX / 2, endY: startY + deltaY / 2});
+    lines.push({ startX: startX + deltaX / 2, startY: startY + deltaY / 2, endX: startX + deltaX / 2, endY: endY });
+    lines.push({ startX: startX + deltaX / 2, startY: endY, endX: endX, endY: endY });
   } else if ((startDirection === Direction.LEFT && endDirection === Direction.RIGHT) || (startDirection === Direction.RIGHT && endDirection === Direction.LEFT)) {
-    lines.push({ x1: startX, y1: startY, x2: startX + deltaX / 2, y2: startY });
-    lines.push({ x1: startX + deltaX / 2, y1: startY, x2: startX + deltaX / 2, y2: endY });
-    lines.push({ x1: startX + deltaX / 2, y1: endY, x2: endX, y2: endY });
+    lines.push({ startX: startX, startY: startY, endX: startX + deltaX / 2, endY: startY });
+    lines.push({ startX: startX + deltaX / 2, startY: startY, endX: startX + deltaX / 2, endY: endY });
+    lines.push({ startX: startX + deltaX / 2, startY: endY, endX: endX, endY: endY });
   } else {
-    lines.push({ x1: startX, y1: startY, x2: startX + deltaX / 2, y2: startY, });
-    lines.push({ x1: startX + deltaX / 2, y1: startY, x2: startX + deltaX / 2, y2: startY + deltaY / 2 });
-    lines.push({ x1: startX + deltaX / 2, y1: startY + deltaY / 2, x2: endX, y2: startY + deltaY / 2 });
-    lines.push({ x1: startX + deltaX / 2, y1: startY + deltaY / 2, x2: endX, y2: endY });
+    lines.push({ startX: startX, startY: startY, endX: startX + deltaX / 2, endY: startY, });
+    lines.push({ startX: startX + deltaX / 2, startY: startY, endX: startX + deltaX / 2, endY: startY + deltaY / 2 });
+    lines.push({ startX: startX + deltaX / 2, startY: startY + deltaY / 2, endX: endX, endY: startY + deltaY / 2 });
+    lines.push({ startX: startX + deltaX / 2, startY: startY + deltaY / 2, endX: endX, endY: endY });
   }
 
   return lines;
 }
 
 function calculateAngle(line: LineType): number {
-  const deltaX = line.x2 - line.x1;
-  const deltaY = line.y1 - line.y2;
+  const deltaX = line.endX - line.startX;
+  const deltaY = line.startY - line.endY;
   const radians = Math.atan2(deltaY, deltaX);
   return (radians * (180 / Math.PI) + 360) % 360;
 }

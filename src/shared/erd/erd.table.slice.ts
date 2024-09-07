@@ -11,6 +11,7 @@ interface LineCount {
 interface TableType {
   index: number,
   connectIndex: Array<number>,
+  connectDirection: LineCount,
   positionX: number,
   positionY: number,
   width: number,
@@ -25,6 +26,7 @@ export interface TableSlice {
   setRect: (index: number, width: number, height: number) => void,
   addTable: (x: number, y: number) => void,
   connectTable: (start: number, end: number) => void,
+  InitTablesDirection: () => void,
 };
 
 const defaultState: Array<TableType> = [];
@@ -41,6 +43,7 @@ export const createTableSlice: StateCreator<TableSlice, [], [], TableSlice> = (s
     const newTable = {
       index: get().tables.length,
       connectIndex: [],
+      connectDirection: {top: 0, bottom: 0, left: 0, right: 0},
       positionX: x,
       positionY: y,
       width: -1,
@@ -75,7 +78,20 @@ export const createTableSlice: StateCreator<TableSlice, [], [], TableSlice> = (s
 
   connectTable: (start: number, end: number) => {
     const tables = get();
-    tables.tables[start].connectIndex.push(end);
-    set({tables: tables.tables});
+    
+    if(!tables.tables[start].connectIndex.includes(end)){
+      tables.tables[start].connectIndex.push(end);
+      set({tables: tables.tables});
+    }
+  },
+
+  InitTablesDirection: () => {
+    const tables = get().tables.map((table, index) => {
+      table.connectDirection = {top: 0, bottom: 0, left: 0, right: 0};
+
+      return table;
+    });
+
+    set({tables: tables});
   }
 });
