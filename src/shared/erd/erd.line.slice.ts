@@ -143,20 +143,20 @@ function linePush(
 
   if(endDirection == Direction.TOP) {
     tableLineCount[endIndex].top += 1;
-    line.startX -= endTable.width / 2;
-    line.startX += endTable.width / (endTable.connectDirection.top+1) * tableLineCount[endIndex].top
+    line.endX -= endTable.width / 2;
+    line.endX += endTable.width / (endTable.connectDirection.top+1) * tableLineCount[endIndex].top
   } else if(endDirection == Direction.BOTTOM) {
     tableLineCount[endIndex].bottom += 1;
-    line.startX -= endTable.width / 2;
-    line.startX += endTable.width / (endTable.connectDirection.bottom+1) * tableLineCount[endIndex].bottom
+    line.endX -= endTable.width / 2;
+    line.endX += endTable.width / (endTable.connectDirection.bottom+1) * tableLineCount[endIndex].bottom
   } else if(endDirection == Direction.LEFT) {
     tableLineCount[endIndex].left += 1;
-    line.startY -= endTable.height / 2;
-    line.startY += endTable.height / (endTable.connectDirection.left+1) * tableLineCount[endIndex].left
+    line.endY -= endTable.height / 2;
+    line.endY += endTable.height / (endTable.connectDirection.left+1) * tableLineCount[endIndex].left
   } else if(endDirection == Direction.RIGHT) {
     tableLineCount[endIndex].right += 1;
-    line.startY -= endTable.height/2;
-    line.startY += endTable.height / (endTable.connectDirection.right+1) * tableLineCount[endIndex].right
+    line.endY -= endTable.height/2;
+    line.endY += endTable.height / (endTable.connectDirection.right+1) * tableLineCount[endIndex].right
   }
 
   const deltaX = line.endX - line.startX;
