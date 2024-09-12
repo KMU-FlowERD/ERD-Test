@@ -3,7 +3,7 @@
 import { ColumnType } from "@/shared/column";
 import { useErdStore } from "@/shared/erd";
 import styled from "@emotion/styled";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 interface Position {
   x: number,
@@ -24,26 +24,41 @@ export function Table ({
   childColumns: Array<ColumnType>,
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const {clickPosition, setRect, setPos, connectTable, setLines, InitTablesDirection} = useErdStore();
+  const {clickPosition, setTablePosition, setRect, setPos, connectTable, setLines, InitTablesDirection} = useErdStore();
+
+  const [startPosition, setStartPosition] = useState<Position>(pos);
 
   const tableClicked = () => {
-    if(boxRef.current && clickPosition.positionX != 0) {
+    if(boxRef.current && clickPosition.index != -1) {
       const rect = boxRef.current.getBoundingClientRect();
 
       setRect(index, rect.width, rect.height);// 테이블의 크기 저장
       connectTable(clickPosition.index, index);
-      setPos(0, 0, 0, 0, 0); // 다시 0으로 돌아와서 새로운 라인 생성 준비
+      setPos(-1); // 다시 0으로 돌아와서 새로운 라인 생성 준비
       InitTablesDirection();
       setLines(); // 라인 초기화
-    } else if(boxRef.current && clickPosition.positionX == 0) {
+    } else if(boxRef.current && clickPosition.index == -1) {
       const rect = boxRef.current.getBoundingClientRect();
 
       setRect(index, rect.width, rect.height);
-      setPos(pos.x + rect.width/2, pos.y + rect.height / 2, rect.width, rect.height, index); // 테이블의 가운데 Position과 크기 저장
+      setPos(index); // 테이블의 가운데 Position과 크기 저장
+    }
+  }
+  
+  const startDragTable = (e: {clientX: number, clientY: number}) => {
+    setStartPosition({x:e.clientX, y:e.clientY});
+  }
+
+  const dragTable = (e: {clientX: number, clientY: number}) => {
+    if(e.clientX !== 0 && e.clientY !== 0) {
+      setTablePosition(index, pos.x + (e.clientX - startPosition.x), pos.y + (e.clientY - startPosition.y));
+      setStartPosition({x:e.clientX, y:e.clientY});
+      InitTablesDirection();
+      setLines(); // 라인 초기화
     }
   }
 
-  return <styles.displayWrapper ref={boxRef} onClick={tableClicked} $name={name} $pos={pos}>
+  return <styles.displayWrapper draggable={true} onDragStart={startDragTable} onDrag={dragTable} ref={boxRef} onClick={tableClicked} $name={name} $pos={pos}>
     <Column column={mainColumn} title={true}/>
     {
       childColumns.map((column, index) => {

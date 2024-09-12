@@ -24,6 +24,7 @@ interface TableType {
 export interface TableSlice {
   tables: Array<TableType>,
   setRect: (index: number, width: number, height: number) => void,
+  setTablePosition: (index: number, x: number, y: number) => void,
   addTable: (x: number, y: number) => void,
   connectTable: (start: number, end: number) => void,
   InitTablesDirection: () => void,
@@ -37,6 +38,12 @@ export const createTableSlice: StateCreator<TableSlice, [], [], TableSlice> = (s
     const tables = get();
     tables.tables[index].width = width;
     tables.tables[index].height = height;
+    set({tables: tables.tables});
+  },
+  setTablePosition: (index: number, x: number, y: number) => {
+    const tables = get();
+    tables.tables[index].positionX = x;
+    tables.tables[index].positionY = y;
     set({tables: tables.tables});
   },
   addTable: (x: number, y: number) => {
