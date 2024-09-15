@@ -1,119 +1,149 @@
-"use client";
+'use client';
 
-import { ColumnType } from "@/shared/column";
-import { useErdStore } from "@/shared/erd";
-import styled from "@emotion/styled";
-import { useRef, useState } from "react";
+import { ColumnType } from '@/shared/column';
+import { useErdStore } from '@/shared/erd';
+import styled from '@emotion/styled';
+import { useRef, useState } from 'react';
 
 interface Position {
-  x: number,
-  y: number,
+  x: number;
+  y: number;
 }
 
-export function Table ({
+export function Table({
   index,
   pos,
   name,
   mainColumn,
   childColumns,
-}:{
-  index: number,
-  pos: Position,
-  name: string,
-  mainColumn: ColumnType,
-  childColumns: Array<ColumnType>,
+}: {
+  index: number;
+  pos: Position;
+  name: string;
+  mainColumn: ColumnType;
+  childColumns: Array<ColumnType>;
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const {clickPosition, setTablePosition, setRect, setPos, connectTable, setLines, InitTablesDirection} = useErdStore();
+  const {
+    clickPosition,
+    setTablePosition,
+    setRect,
+    setPos,
+    connectTable,
+    setLines,
+    InitTablesDirection,
+  } = useErdStore();
 
   const [startPosition, setStartPosition] = useState<Position>(pos);
 
   const tableClicked = () => {
-    if(boxRef.current && clickPosition.index != -1) {
+    if (boxRef.current && clickPosition.index != -1) {
       const rect = boxRef.current.getBoundingClientRect();
 
-      setRect(index, rect.width, rect.height);// 테이블의 크기 저장
+      setRect(index, rect.width, rect.height); // 테이블의 크기 저장
       connectTable(clickPosition.index, index);
       setPos(-1); // 다시 0으로 돌아와서 새로운 라인 생성 준비
       InitTablesDirection();
       setLines(); // 라인 초기화
-    } else if(boxRef.current && clickPosition.index == -1) {
+    } else if (boxRef.current && clickPosition.index == -1) {
       const rect = boxRef.current.getBoundingClientRect();
 
       setRect(index, rect.width, rect.height);
       setPos(index); // 테이블의 가운데 Position과 크기 저장
     }
-  }
-  
-  const startDragTable = (e: {clientX: number, clientY: number}) => {
-    setStartPosition({x:e.clientX, y:e.clientY});
-  }
+  };
 
-  const dragTable = (e: {clientX: number, clientY: number}) => {
-    if(e.clientX !== 0 && e.clientY !== 0) {
-      setTablePosition(index, pos.x + (e.clientX - startPosition.x), pos.y + (e.clientY - startPosition.y));
-      setStartPosition({x:e.clientX, y:e.clientY});
-      InitTablesDirection();
-      setLines(); // 라인 초기화
-    }
-  }
+  const startDragTable = (e: { clientX: number; clientY: number }) => {
+    setStartPosition({ x: e.clientX, y: e.clientY });
+  };
 
-  return <styles.displayWrapper draggable={true} onDragStart={startDragTable} onDrag={dragTable} ref={boxRef} onClick={tableClicked} $name={name} $pos={pos}>
-    <Column column={mainColumn} title={true}/>
-    {
-      childColumns.map((column, index) => {
-        return <Column key={index} column={column} title={false}/>
-      })
-    }
-  </ styles.displayWrapper>
+  let timer: any = 0;
+
+  const dragTable = (e: { clientX: number; clientY: number }) => {
+    if (timer) return;
+
+    timer = setTimeout(() => {
+      if (e.clientX !== 0 && e.clientY !== 0) {
+        setTablePosition(
+          index,
+          pos.x + (e.clientX - startPosition.x),
+          pos.y + (e.clientY - startPosition.y),
+        );
+        setStartPosition({ x: e.clientX, y: e.clientY });
+        InitTablesDirection();
+        setLines(); // 라인 초기화
+      }
+    }, 10);
+  };
+
+  return (
+    <styles.displayWrapper
+      draggable={true}
+      onDragStart={startDragTable}
+      onDrag={dragTable}
+      ref={boxRef}
+      onClick={tableClicked}
+      $name={name}
+      $pos={pos}
+    >
+      <Column column={mainColumn} title={true} />
+      {childColumns.map((column, index) => {
+        return <Column key={index} column={column} title={false} />;
+      })}
+    </styles.displayWrapper>
+  );
 }
 
-function Column({column, title} : {column: ColumnType, title: boolean}) {
+function Column({ column, title }: { column: ColumnType; title: boolean }) {
   const pk = (isIn: boolean) => {
-    if(isIn) return <styles.pkStyle>pk</ styles.pkStyle>;
+    if (isIn) return <styles.pkStyle>pk</styles.pkStyle>;
     else return <styles.pkStyle />;
-  }
+  };
 
   const fk = (isIn: boolean) => {
-    if(isIn) return <styles.fkStyle>fk</ styles.fkStyle>;
+    if (isIn) return <styles.fkStyle>fk</styles.fkStyle>;
     else return <styles.fkStyle />;
-  }
+  };
 
   const nullable = (isIn: boolean) => {
-    if(isIn) return <styles.nullableStyle>nullable</ styles.nullableStyle>;
+    if (isIn) return <styles.nullableStyle>nullable</styles.nullableStyle>;
     else return <styles.nullableStyle />;
-  }
+  };
 
-  if(title) {
-    return <styles.mainColumnWrapper>
-      {column.name}
-      <styles.extraWrapper>
-        {pk(column.pk)}
-        {fk(column.fk)}
-        {nullable(column.nullable)}
-      </ styles.extraWrapper>
-    </styles.mainColumnWrapper>
+  if (title) {
+    return (
+      <styles.mainColumnWrapper>
+        {column.name}
+        <styles.extraWrapper>
+          {pk(column.pk)}
+          {fk(column.fk)}
+          {nullable(column.nullable)}
+        </styles.extraWrapper>
+      </styles.mainColumnWrapper>
+    );
   } else {
-    return <styles.childColumnWrapper>
-      {column.name}
-      <styles.extraWrapper>
-        {pk(column.pk)}
-        {fk(column.fk)}
-        {nullable(column.nullable)}
-      </ styles.extraWrapper>
-    </styles.childColumnWrapper>
+    return (
+      <styles.childColumnWrapper>
+        {column.name}
+        <styles.extraWrapper>
+          {pk(column.pk)}
+          {fk(column.fk)}
+          {nullable(column.nullable)}
+        </styles.extraWrapper>
+      </styles.childColumnWrapper>
+    );
   }
 }
 
 const styles = {
-  displayWrapper: styled.div<{$name: string, $pos: Position}>`
+  displayWrapper: styled.div<{ $name: string; $pos: Position }>`
     position: absolute;
-    left: ${({$pos}) => `${$pos.x}px`};
-    top: ${({$pos}) => `${$pos.y}px`};
+    left: ${({ $pos }) => `${$pos.x}px`};
+    top: ${({ $pos }) => `${$pos.y}px`};
     display: inline flex;
     border-radius: 16px;
     border: 0.5px solid #606060;
-    background: rgba(34, 34, 34, 0.70);
+    background: rgba(34, 34, 34, 0.7);
     flex-direction: column;
     padding: 5px;
     font-size: 12px;
@@ -121,7 +151,7 @@ const styles = {
     cursor: pointer;
 
     &::before {
-      content: ${({$name}) => `"${$name}"`};
+      content: ${({ $name }) => `"${$name}"`};
       position: absolute;
       left: 3px;
       top: -20px;
@@ -132,13 +162,13 @@ const styles = {
     }
   `,
   mainColumnWrapper: styled.div`
-    display:flex;
+    display: flex;
     border-bottom: 1px solid #ededed;
     padding-bottom: 4px;
     margin: 2px;
   `,
   childColumnWrapper: styled.div`
-    display:flex;
+    display: flex;
     margin: 2px;
   `,
   extraWrapper: styled.div`
@@ -156,4 +186,4 @@ const styles = {
   nullableStyle: styled.div`
     width: 60px;
   `,
-}
+};
