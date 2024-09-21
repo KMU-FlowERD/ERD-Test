@@ -73,7 +73,7 @@ export function Table({
         InitTablesDirection();
         setLines(); // 라인 초기화
       }
-    }, 10);
+    }, 5);
   };
 
   return (

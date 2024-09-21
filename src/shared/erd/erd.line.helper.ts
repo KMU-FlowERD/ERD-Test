@@ -3,65 +3,85 @@ import { Direction, LineCount, LineType } from './erd.line.type';
 export function linePush(
   lines: Array<LineType>,
   angle: number,
-  startTable: { width: number; height: number, connectDirection: LineCount },
-  endTable: { width: number; height: number, connectDirection: LineCount },
+  startTable: { width: number; height: number; connectDirection: LineCount },
+  endTable: { width: number; height: number; connectDirection: LineCount },
   line: LineType,
   tableLineCount: Array<LineCount>,
   startIndex: number,
   endIndex: number,
+  manyEnd: boolean,
 ) {
-  const { startDirection, endDirection, updatedStart, updatedEnd } = getLineDirectionsAndPositions(
-    angle,
-    startTable,
-    endTable,
-    line,
-  );
+  const { startDirection, endDirection, updatedStart, updatedEnd } =
+    getLineDirectionsAndPositions(angle, startTable, endTable, line);
 
   line.startX = updatedStart.x;
   line.startY = updatedStart.y;
   line.endX = updatedEnd.x;
   line.endY = updatedEnd.y;
 
-  if(startDirection == Direction.TOP) {
+  if (startDirection == Direction.TOP) {
     tableLineCount[startIndex].top += 1;
     line.startX -= startTable.width / 2;
-    line.startX += startTable.width / (startTable.connectDirection.top+1) * tableLineCount[startIndex].top
-  } else if(startDirection == Direction.BOTTOM) {
+    line.startX +=
+      (startTable.width / (startTable.connectDirection.top + 1)) *
+      tableLineCount[startIndex].top;
+  } else if (startDirection == Direction.BOTTOM) {
     tableLineCount[startIndex].bottom += 1;
     line.startX -= startTable.width / 2;
-    line.startX += startTable.width / (startTable.connectDirection.bottom+1) * tableLineCount[startIndex].bottom
-  } else if(startDirection == Direction.LEFT) {
+    line.startX +=
+      (startTable.width / (startTable.connectDirection.bottom + 1)) *
+      tableLineCount[startIndex].bottom;
+  } else if (startDirection == Direction.LEFT) {
     tableLineCount[startIndex].left += 1;
     line.startY -= startTable.height / 2;
-    line.startY += startTable.height / (startTable.connectDirection.left+1) * tableLineCount[startIndex].left
-  } else if(startDirection == Direction.RIGHT) {
+    line.startY +=
+      (startTable.height / (startTable.connectDirection.left + 1)) *
+      tableLineCount[startIndex].left;
+  } else if (startDirection == Direction.RIGHT) {
     tableLineCount[startIndex].right += 1;
-    line.startY -= startTable.height/2;
-    line.startY += startTable.height / (startTable.connectDirection.right+1) * tableLineCount[startIndex].right
+    line.startY -= startTable.height / 2;
+    line.startY +=
+      (startTable.height / (startTable.connectDirection.right + 1)) *
+      tableLineCount[startIndex].right;
   }
 
-  if(endDirection == Direction.TOP) {
+  if (endDirection == Direction.TOP) {
     tableLineCount[endIndex].top += 1;
     line.endX -= endTable.width / 2;
-    line.endX += endTable.width / (endTable.connectDirection.top+1) * tableLineCount[endIndex].top
-  } else if(endDirection == Direction.BOTTOM) {
+    line.endX +=
+      (endTable.width / (endTable.connectDirection.top + 1)) *
+      tableLineCount[endIndex].top;
+  } else if (endDirection == Direction.BOTTOM) {
     tableLineCount[endIndex].bottom += 1;
     line.endX -= endTable.width / 2;
-    line.endX += endTable.width / (endTable.connectDirection.bottom+1) * tableLineCount[endIndex].bottom
-  } else if(endDirection == Direction.LEFT) {
+    line.endX +=
+      (endTable.width / (endTable.connectDirection.bottom + 1)) *
+      tableLineCount[endIndex].bottom;
+  } else if (endDirection == Direction.LEFT) {
     tableLineCount[endIndex].left += 1;
     line.endY -= endTable.height / 2;
-    line.endY += endTable.height / (endTable.connectDirection.left+1) * tableLineCount[endIndex].left
-  } else if(endDirection == Direction.RIGHT) {
+    line.endY +=
+      (endTable.height / (endTable.connectDirection.left + 1)) *
+      tableLineCount[endIndex].left;
+  } else if (endDirection == Direction.RIGHT) {
     tableLineCount[endIndex].right += 1;
-    line.endY -= endTable.height/2;
-    line.endY += endTable.height / (endTable.connectDirection.right+1) * tableLineCount[endIndex].right
+    line.endY -= endTable.height / 2;
+    line.endY +=
+      (endTable.height / (endTable.connectDirection.right + 1)) *
+      tableLineCount[endIndex].right;
   }
 
   const deltaX = line.endX - line.startX;
   const deltaY = line.endY - line.startY;
 
-  const drawLines: Array<LineType> = getDrawLines(startDirection, endDirection, line, deltaX, deltaY);
+  const drawLines: Array<LineType> = getDrawLines(
+    startDirection,
+    endDirection,
+    line,
+    deltaX,
+    deltaY,
+    manyEnd,
+  );
 
   drawLines.forEach((line) => lines.push(line));
 }
@@ -112,14 +132,14 @@ export function getDirection(
     }
   }
 
-  return {startDirection: startDirection, endDirection: endDirection};
+  return { startDirection: startDirection, endDirection: endDirection };
 }
 
 function getLineDirectionsAndPositions(
   angle: number,
   startTable: { width: number; height: number },
   endTable: { width: number; height: number },
-  line: LineType
+  line: LineType,
 ) {
   const tanAngle = Math.tan(getRadian(angle));
   const startAspect = startTable.height / startTable.width;
@@ -162,27 +182,27 @@ function getLineDirectionsAndPositions(
     }
   }
 
-  const updatedStart = {x: line.startX, y: line.startY};
-  const updatedEnd = {x: line.endX, y: line.endY};
+  const updatedStart = { x: line.startX, y: line.startY };
+  const updatedEnd = { x: line.endX, y: line.endY };
 
-  if(startDirection === Direction.RIGHT) {
-    updatedStart.x += startTable.width/2;
-  } else if(startDirection === Direction.LEFT) {
-    updatedStart.x -= startTable.width/2;
-  } else if(startDirection === Direction.TOP) {
-    updatedStart.y -= startTable.height/2;
-  } else if(startDirection === Direction.BOTTOM) {
-    updatedStart.y += startTable.height/2;
+  if (startDirection === Direction.RIGHT) {
+    updatedStart.x += startTable.width / 2;
+  } else if (startDirection === Direction.LEFT) {
+    updatedStart.x -= startTable.width / 2;
+  } else if (startDirection === Direction.TOP) {
+    updatedStart.y -= startTable.height / 2;
+  } else if (startDirection === Direction.BOTTOM) {
+    updatedStart.y += startTable.height / 2;
   }
 
-  if(endDirection === Direction.RIGHT) {
-    updatedEnd.x += endTable.width/2;
-  } else if(endDirection === Direction.LEFT) {
-    updatedEnd.x -= endTable.width/2;
-  } else if(endDirection === Direction.TOP) {
-    updatedEnd.y -= endTable.height/2;
-  } else if(endDirection === Direction.BOTTOM) {
-    updatedEnd.y += endTable.height/2;
+  if (endDirection === Direction.RIGHT) {
+    updatedEnd.x += endTable.width / 2;
+  } else if (endDirection === Direction.LEFT) {
+    updatedEnd.x -= endTable.width / 2;
+  } else if (endDirection === Direction.TOP) {
+    updatedEnd.y -= endTable.height / 2;
+  } else if (endDirection === Direction.BOTTOM) {
+    updatedEnd.y += endTable.height / 2;
   }
 
   return { startDirection, endDirection, updatedStart, updatedEnd };
@@ -193,7 +213,8 @@ function getDrawLines(
   endDirection: Direction,
   line: LineType,
   deltaX: number,
-  deltaY: number
+  deltaY: number,
+  manyEnd: boolean,
 ): Array<LineType> {
   const lines: Array<LineType> = [];
 
@@ -202,30 +223,260 @@ function getDrawLines(
   const endX = line.endX;
   const endY = line.endY;
 
-  if ((startDirection === Direction.TOP && endDirection === Direction.BOTTOM) || (startDirection === Direction.BOTTOM && endDirection === Direction.TOP)) {
-    lines.push({ startX: startX, startY: startY, endX: startX, endY: startY + deltaY / 2 });
-    lines.push({ startX: startX, startY: startY + deltaY / 2, endX: endX, endY: startY + deltaY / 2 });
-    lines.push({ startX: endX, startY: startY + deltaY / 2, endX: endX, endY: endY });
-  } else if ((startDirection === Direction.TOP && endDirection !== Direction.BOTTOM) || (startDirection === Direction.BOTTOM && endDirection !== Direction.TOP)) {
-    lines.push({ startX: startX, startY: startY, endX: startX, endY: startY + deltaY / 2});
-    lines.push({ startX: startX, startY: startY + deltaY / 2, endX: startX + deltaX / 2, endY: startY + deltaY / 2});
-    lines.push({ startX: startX + deltaX / 2, startY: startY + deltaY / 2, endX: startX + deltaX / 2, endY: endY });
-    lines.push({ startX: startX + deltaX / 2, startY: endY, endX: endX, endY: endY });
-  } else if ((startDirection === Direction.LEFT && endDirection === Direction.RIGHT) || (startDirection === Direction.RIGHT && endDirection === Direction.LEFT)) {
-    lines.push({ startX: startX, startY: startY, endX: startX + deltaX / 2, endY: startY });
-    lines.push({ startX: startX + deltaX / 2, startY: startY, endX: startX + deltaX / 2, endY: endY });
-    lines.push({ startX: startX + deltaX / 2, startY: endY, endX: endX, endY: endY });
+  if (
+    (startDirection === Direction.TOP && endDirection === Direction.BOTTOM) ||
+    (startDirection === Direction.BOTTOM && endDirection === Direction.TOP)
+  ) {
+    lines.push({
+      startX: startX,
+      startY: startY,
+      endX: startX,
+      endY: startY + deltaY / 2,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX,
+      startY: startY + deltaY / 2,
+      endX: endX,
+      endY: startY + deltaY / 2,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: endX,
+      startY: startY + deltaY / 2,
+      endX: endX,
+      endY: endY,
+      identify: line.identify,
+    });
+  } else if (
+    (startDirection === Direction.TOP && endDirection !== Direction.BOTTOM) ||
+    (startDirection === Direction.BOTTOM && endDirection !== Direction.TOP)
+  ) {
+    lines.push({
+      startX: startX,
+      startY: startY,
+      endX: startX,
+      endY: startY + deltaY / 2,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX,
+      startY: startY + deltaY / 2,
+      endX: startX + deltaX / 2,
+      endY: startY + deltaY / 2,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: startY + deltaY / 2,
+      endX: startX + deltaX / 2,
+      endY: endY,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: endY,
+      endX: endX,
+      endY: endY,
+      identify: line.identify,
+    });
+  } else if (
+    (startDirection === Direction.LEFT && endDirection === Direction.RIGHT) ||
+    (startDirection === Direction.RIGHT && endDirection === Direction.LEFT)
+  ) {
+    lines.push({
+      startX: startX,
+      startY: startY,
+      endX: startX + deltaX / 2,
+      endY: startY,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: startY,
+      endX: startX + deltaX / 2,
+      endY: endY,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: endY,
+      endX: endX,
+      endY: endY,
+      identify: line.identify,
+    });
   } else {
-    lines.push({ startX: startX, startY: startY, endX: startX + deltaX / 2, endY: startY, });
-    lines.push({ startX: startX + deltaX / 2, startY: startY, endX: startX + deltaX / 2, endY: startY + deltaY / 2 });
-    lines.push({ startX: startX + deltaX / 2, startY: startY + deltaY / 2, endX: endX, endY: startY + deltaY / 2 });
-    lines.push({ startX: startX + deltaX / 2, startY: startY + deltaY / 2, endX: endX, endY: endY });
+    lines.push({
+      startX: startX,
+      startY: startY,
+      endX: startX + deltaX / 2,
+      endY: startY,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: startY,
+      endX: startX + deltaX / 2,
+      endY: startY + deltaY / 2,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: startY + deltaY / 2,
+      endX: endX,
+      endY: startY + deltaY / 2,
+      identify: line.identify,
+    });
+    lines.push({
+      startX: startX + deltaX / 2,
+      startY: startY + deltaY / 2,
+      endX: endX,
+      endY: endY,
+      identify: line.identify,
+    });
+  }
+
+  if (startDirection == Direction.TOP) {
+    lines.push({
+      startX: startX - 10,
+      startY: startY - 10,
+      endX: startX + 10,
+      endY: startY - 10,
+      identify: true,
+    });
+  } else if (startDirection == Direction.BOTTOM) {
+    lines.push({
+      startX: startX - 10,
+      startY: startY + 10,
+      endX: startX + 10,
+      endY: startY + 10,
+      identify: true,
+    });
+  } else if (startDirection == Direction.LEFT) {
+    lines.push({
+      startX: startX - 10,
+      startY: startY - 10,
+      endX: startX - 10,
+      endY: startY + 10,
+      identify: true,
+    });
+  } else if (startDirection == Direction.RIGHT) {
+    lines.push({
+      startX: startX + 10,
+      startY: startY - 10,
+      endX: startX + 10,
+      endY: startY + 10,
+      identify: true,
+    });
+  }
+
+  if (endDirection == Direction.TOP) {
+    lines.push({
+      startX: endX - 10,
+      startY: endY - 10,
+      endX: endX + 10,
+      endY: endY - 10,
+      identify: true,
+    });
+  } else if (endDirection == Direction.BOTTOM) {
+    lines.push({
+      startX: endX - 10,
+      startY: endY + 10,
+      endX: endX + 10,
+      endY: endY + 10,
+      identify: true,
+    });
+  } else if (endDirection == Direction.LEFT) {
+    lines.push({
+      startX: endX - 10,
+      startY: endY - 10,
+      endX: endX - 10,
+      endY: endY + 10,
+      identify: true,
+    });
+  } else if (endDirection == Direction.RIGHT) {
+    lines.push({
+      startX: endX + 10,
+      startY: endY - 10,
+      endX: endX + 10,
+      endY: endY + 10,
+      identify: true,
+    });
+  }
+
+  if (manyEnd) {
+    if (endDirection == Direction.TOP) {
+      lines.push({
+        startX: endX,
+        startY: endY - 10,
+        endX: endX + 10,
+        endY: endY,
+        identify: true,
+      });
+      lines.push({
+        startX: endX,
+        startY: endY - 10,
+        endX: endX - 10,
+        endY: endY,
+        identify: true,
+      });
+    } else if (endDirection == Direction.BOTTOM) {
+      lines.push({
+        startX: endX,
+        startY: endY + 10,
+        endX: endX + 10,
+        endY: endY,
+        identify: true,
+      });
+      lines.push({
+        startX: endX,
+        startY: endY + 10,
+        endX: endX - 10,
+        endY: endY,
+        identify: true,
+      });
+    } else if (endDirection == Direction.LEFT) {
+      lines.push({
+        startX: endX - 10,
+        startY: endY,
+        endX: endX,
+        endY: endY + 10,
+        identify: true,
+      });
+      lines.push({
+        startX: endX - 10,
+        startY: endY,
+        endX: endX,
+        endY: endY - 10,
+        identify: true,
+      });
+    } else if (endDirection == Direction.RIGHT) {
+      lines.push({
+        startX: endX + 10,
+        startY: endY,
+        endX: endX,
+        endY: endY + 10,
+        identify: true,
+      });
+      lines.push({
+        startX: endX + 10,
+        startY: endY,
+        endX: endX,
+        endY: endY - 10,
+        identify: true,
+      });
+    }
   }
 
   return lines;
 }
 
-export function calculateAngle(line: LineType): number {
+export function calculateAngle(line: {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}): number {
   const deltaX = line.endX - line.startX;
   const deltaY = line.startY - line.endY;
   const radians = Math.atan2(deltaY, deltaX);
