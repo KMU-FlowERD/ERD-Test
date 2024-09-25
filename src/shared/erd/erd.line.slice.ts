@@ -1,33 +1,50 @@
 import { StateCreator } from 'zustand';
 import { TableSlice } from './erd.table.slice';
-import { Direction, LineCount, LineType } from './erd.line.type';
+import {
+  CircleType,
+  Direction,
+  LineCount,
+  LineType,
+  PolygonType,
+} from './erd.line.type';
 import { calculateAngle, getDirection, linePush } from './erd.line.helper';
+import { KeyboardSlice } from './erd.keyboard.slice';
 
 export interface LineSlice {
   lines: Array<LineType>;
+  circles: Array<CircleType>;
+  polygons: Array<PolygonType>;
   setLines: () => void;
 }
 
 const defaultState: Array<LineType> = [];
+const defaultCircle: Array<CircleType> = [];
+const defaultPolygon: Array<PolygonType> = [];
 
 export const createLineSlice: StateCreator<
-  LineSlice & TableSlice,
+  LineSlice & TableSlice & KeyboardSlice,
   [],
   [],
   LineSlice
 > = (set, get) => ({
   lines: defaultState,
+  circles: defaultCircle,
+  polygons: defaultPolygon,
   setLines: () => {
     const tables = get().tables;
+    const keyboard = get().keyboard;
 
     const tableLineCount: Array<LineCount> = tables.map(() => {
       return { top: 0, bottom: 0, left: 0, right: 0 };
     });
 
     const lines: Array<LineType> = [];
+    const circles: Array<CircleType> = [];
+    const polygons: Array<PolygonType> = [];
 
     tables.forEach((startTable, startIndex) => {
-      startTable.connectIndex.forEach((endIndex) => {
+      startTable.connectIndex.forEach((end) => {
+        const endIndex = end.index;
         const endTable = tables[endIndex];
 
         const startX = startTable.positionX + startTable.width / 2;
@@ -71,7 +88,8 @@ export const createLineSlice: StateCreator<
     });
 
     tables.forEach((startTable, startIndex) => {
-      startTable.connectIndex.forEach((endIndex) => {
+      startTable.connectIndex.forEach((end) => {
+        const endIndex = end.index;
         const endTable = tables[endIndex];
 
         const startX = startTable.positionX + startTable.width / 2;
@@ -88,18 +106,23 @@ export const createLineSlice: StateCreator<
 
         linePush(
           lines,
+          circles,
+          polygons,
           angle,
           startTable,
           endTable,
-          { startX, startY, endX, endY, identify: false },
+          { startX, startY, endX, endY, identify: end.identify },
           tableLineCount,
           startIndex,
           endIndex,
-          true,
+          end.many,
+          end.startNullable,
+          end.endNullable,
+          keyboard.crowFoot,
         );
       });
     });
 
-    set({ lines });
+    set({ lines: lines, circles: circles, polygons: polygons });
   },
 });

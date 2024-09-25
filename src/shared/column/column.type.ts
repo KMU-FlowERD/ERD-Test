@@ -1,6 +1,6 @@
 export interface ColumnType {
-  name: string,
-  pk: boolean,
-  fk: boolean,
-  nullable: boolean,
-};
+  name: string;
+  pk: boolean;
+  fk: boolean;
+  nullable: boolean;
+}

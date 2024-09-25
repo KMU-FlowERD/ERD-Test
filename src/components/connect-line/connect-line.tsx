@@ -1,7 +1,7 @@
 import { useErdStore } from '@/shared/erd';
 
 export function ConnectLine() {
-  const { lines } = useErdStore();
+  const { lines, circles, polygons, keyboard } = useErdStore();
 
   return (
     <svg
@@ -35,6 +35,23 @@ export function ConnectLine() {
             />
           );
         }
+      })}
+      {circles.map((circle, index) => {
+        return (
+          <circle
+            r={4}
+            cx={circle.posX}
+            cy={circle.posY}
+            stroke='#ededed'
+            stroke-width='1'
+            fill={keyboard.crowFoot ? '#2f2f2f' : '#ededed'}
+          />
+        );
+      })}
+      {polygons.map((polygon, index) => {
+        return (
+          <polygon points={polygon.positions} stroke='#ededed' fill='#ededed' />
+        );
       })}
     </svg>
   );

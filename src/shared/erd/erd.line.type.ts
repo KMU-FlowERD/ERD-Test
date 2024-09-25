@@ -6,6 +6,16 @@ export interface LineType {
   identify: boolean;
 }
 
+export interface CircleType {
+  posX: number;
+  posY: number;
+  radius: number;
+}
+
+export interface PolygonType {
+  positions: string;
+}
+
 export interface LineCount {
   top: number;
   bottom: number;
