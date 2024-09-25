@@ -60,6 +60,7 @@ export default function Home() {
         return (
           <Table
             key={index}
+            isChild={table.isChild}
             index={table.index}
             pos={{ x: table.positionX, y: table.positionY }}
             name={table.name}

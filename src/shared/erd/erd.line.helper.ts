@@ -392,14 +392,14 @@ function getDrawLines(
   }
 
   if (startNullable) {
-    if (endDirection == Direction.TOP) {
-      drawCircles.push({ posX: endX, posY: endY - 13, radius: 3 });
-    } else if (endDirection == Direction.BOTTOM) {
-      drawCircles.push({ posX: endX, posY: endY + 13, radius: 3 });
-    } else if (endDirection == Direction.LEFT) {
-      drawCircles.push({ posX: endX - 13, posY: endY, radius: 3 });
-    } else if (endDirection == Direction.RIGHT) {
-      drawCircles.push({ posX: endX + 13, posY: endY, radius: 3 });
+    if (startDirection == Direction.TOP) {
+      drawCircles.push({ posX: startX, posY: startY - 13, radius: 3 });
+    } else if (startDirection == Direction.BOTTOM) {
+      drawCircles.push({ posX: startX, posY: startY + 13, radius: 3 });
+    } else if (startDirection == Direction.LEFT) {
+      drawCircles.push({ posX: startX - 13, posY: startY, radius: 3 });
+    } else if (startDirection == Direction.RIGHT) {
+      drawCircles.push({ posX: startX + 13, posY: startY, radius: 3 });
     }
   } else {
     if (startDirection == Direction.TOP) {

@@ -12,12 +12,14 @@ interface Position {
 
 export function Table({
   index,
+  isChild,
   pos,
   name,
   mainColumn,
   childColumns,
 }: {
   index: number;
+  isChild: boolean;
   pos: Position;
   name: string;
   mainColumn: ColumnType;
@@ -25,6 +27,7 @@ export function Table({
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
   const {
+    keyboard,
     clickPosition,
     setTablePosition,
     setRect,
@@ -32,6 +35,7 @@ export function Table({
     connectTable,
     setLines,
     InitTablesDirection,
+    setChild,
   } = useErdStore();
 
   const [startPosition, setStartPosition] = useState<Position>(pos);
@@ -43,6 +47,7 @@ export function Table({
       setRect(index, rect.width, rect.height); // 테이블의 크기 저장
       connectTable(clickPosition.index, index);
       setPos(-1); // 다시 0으로 돌아와서 새로운 라인 생성 준비
+      keyboard.identify && setChild(index);
       InitTablesDirection();
       setLines(); // 라인 초기화
     } else if (boxRef.current && clickPosition.index == -1) {
@@ -85,6 +90,7 @@ export function Table({
       onClick={tableClicked}
       $name={name}
       $pos={pos}
+      $border={!keyboard.crowFoot && isChild}
     >
       <Column column={mainColumn} title={true} />
       {childColumns.map((column, index) => {
@@ -136,12 +142,16 @@ function Column({ column, title }: { column: ColumnType; title: boolean }) {
 }
 
 const styles = {
-  displayWrapper: styled.div<{ $name: string; $pos: Position }>`
+  displayWrapper: styled.div<{
+    $name: string;
+    $pos: Position;
+    $border: boolean;
+  }>`
     position: absolute;
     left: ${({ $pos }) => `${$pos.x}px`};
     top: ${({ $pos }) => `${$pos.y}px`};
     display: inline flex;
-    border-radius: 16px;
+    border-radius: ${({ $border }) => ($border ? `16px` : '0px')};
     border: 0.5px solid #606060;
     background: rgba(34, 34, 34, 0.7);
     flex-direction: column;

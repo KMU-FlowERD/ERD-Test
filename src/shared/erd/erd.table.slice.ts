@@ -19,6 +19,7 @@ interface ConnectTableType {
 
 interface TableType {
   index: number;
+  isChild: boolean;
   connectIndex: Array<ConnectTableType>;
   connectDirection: LineCount;
   positionX: number;
@@ -34,6 +35,7 @@ export interface TableSlice {
   tables: Array<TableType>;
   setRect: (index: number, width: number, height: number) => void;
   setTablePosition: (index: number, x: number, y: number) => void;
+  setChild: (index: number) => void;
   addTable: (x: number, y: number) => void;
   connectTable: (start: number, end: number) => void;
   InitTablesDirection: () => void;
@@ -60,9 +62,15 @@ export const createTableSlice: StateCreator<
     tables.tables[index].positionY = y;
     set({ tables: tables.tables });
   },
+  setChild: (index: number) => {
+    const tables = get();
+    tables.tables[index].isChild = true;
+    set({ tables: tables.tables });
+  },
   addTable: (x: number, y: number) => {
     const newTable = {
       index: get().tables.length,
+      isChild: false,
       connectIndex: [],
       connectDirection: { top: 0, bottom: 0, left: 0, right: 0 },
       positionX: x,
