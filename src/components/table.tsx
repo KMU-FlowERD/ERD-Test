@@ -1,158 +1,97 @@
 'use client';
 
-import { ColumnType } from '@/shared/column';
-import { useErdStore } from '@/shared/erd';
 import styled from '@emotion/styled';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+
+import { ERDTable } from '@/features/erd-project';
 
 interface Position {
-  x: number;
-  y: number;
+  left: number;
+  top: number;
 }
 
 export function Table({
-  index,
-  isChild,
-  pos,
-  name,
-  mainColumn,
-  childColumns,
+  table,
+  rounded,
+  onClick,
+  onPositionChange,
 }: {
-  index: number;
-  isChild: boolean;
-  pos: Position;
-  name: string;
-  mainColumn: ColumnType;
-  childColumns: Array<ColumnType>;
+  table: ERDTable;
+  rounded: boolean;
+  onClick: (table: ERDTable) => void;
+  onPositionChange: (id: string, pos: Position) => void;
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const {
-    keyboard,
-    clickPosition,
-    setTablePosition,
-    setRect,
-    setPos,
-    connectTable,
-    setLines,
-    InitTablesDirection,
-    setChild,
-  } = useErdStore();
+  const [dragging, setDragging] = useState(false);
+  const [offset, setOffset] = useState<Position>({ left: 0, top: 0 });
 
-  const [startPosition, setStartPosition] = useState<Position>(pos);
-
-  const tableClicked = () => {
-    if (boxRef.current && clickPosition.index != -1) {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (boxRef.current) {
       const rect = boxRef.current.getBoundingClientRect();
-
-      setRect(index, rect.width, rect.height); // 테이블의 크기 저장
-      connectTable(clickPosition.index, index);
-      setPos(-1); // 다시 0으로 돌아와서 새로운 라인 생성 준비
-      keyboard.identify && setChild(index);
-      InitTablesDirection();
-      setLines(); // 라인 초기화
-    } else if (boxRef.current && clickPosition.index == -1) {
-      const rect = boxRef.current.getBoundingClientRect();
-
-      setRect(index, rect.width, rect.height);
-      setPos(index); // 테이블의 가운데 Position과 크기 저장
+      setDragging(true);
+      setOffset({
+        left: e.clientX - rect.left,
+        top: e.clientY - rect.top,
+      });
     }
   };
 
-  const startDragTable = (e: { clientX: number; clientY: number }) => {
-    setStartPosition({ x: e.clientX, y: e.clientY });
-  };
-
-  let timer: any = 0;
-
-  const dragTable = (e: { clientX: number; clientY: number }) => {
-    if (timer) return;
-
-    timer = setTimeout(() => {
-      if (e.clientX !== 0 && e.clientY !== 0) {
-        setTablePosition(
-          index,
-          pos.x + (e.clientX - startPosition.x),
-          pos.y + (e.clientY - startPosition.y),
-        );
-        setStartPosition({ x: e.clientX, y: e.clientY });
-        InitTablesDirection();
-        setLines(); // 라인 초기화
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (dragging) {
+        const newPos = {
+          left: e.clientX - offset.left,
+          top: e.clientY - offset.top,
+        };
+        onPositionChange(table.id, newPos);
       }
-    }, 5);
-  };
+    };
+
+    const handleMouseUp = () => {
+      if (dragging) {
+        setDragging(false);
+      }
+    };
+
+    if (dragging) {
+      // 전역적으로 이벤트 리스너를 추가
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      // cleanup 함수에서 이벤트 리스너 제거
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging, offset.left, offset.top, onPositionChange, table.id]);
 
   return (
     <styles.displayWrapper
-      draggable={true}
-      onDragStart={startDragTable}
-      onDrag={dragTable}
       ref={boxRef}
-      onClick={tableClicked}
-      $name={name}
-      $pos={pos}
-      $border={!keyboard.crowFoot && isChild}
-    >
-      <Column column={mainColumn} title={true} />
-      {childColumns.map((column, index) => {
-        return <Column key={index} column={column} title={false} />;
-      })}
-    </styles.displayWrapper>
+      onMouseDown={handleMouseDown}
+      onClick={() => onClick(table)}
+      $name={table.id}
+      $pos={{ left: table.left, top: table.top }}
+      $rounded={rounded}
+    />
   );
-}
-
-function Column({ column, title }: { column: ColumnType; title: boolean }) {
-  const pk = (isIn: boolean) => {
-    if (isIn) return <styles.pkStyle>pk</styles.pkStyle>;
-    else return <styles.pkStyle />;
-  };
-
-  const fk = (isIn: boolean) => {
-    if (isIn) return <styles.fkStyle>fk</styles.fkStyle>;
-    else return <styles.fkStyle />;
-  };
-
-  const nullable = (isIn: boolean) => {
-    if (isIn) return <styles.nullableStyle>nullable</styles.nullableStyle>;
-    else return <styles.nullableStyle />;
-  };
-
-  if (title) {
-    return (
-      <styles.mainColumnWrapper>
-        {column.name}
-        <styles.extraWrapper>
-          {pk(column.pk)}
-          {fk(column.fk)}
-          {nullable(column.nullable)}
-        </styles.extraWrapper>
-      </styles.mainColumnWrapper>
-    );
-  } else {
-    return (
-      <styles.childColumnWrapper>
-        {column.name}
-        <styles.extraWrapper>
-          {pk(column.pk)}
-          {fk(column.fk)}
-          {nullable(column.nullable)}
-        </styles.extraWrapper>
-      </styles.childColumnWrapper>
-    );
-  }
 }
 
 const styles = {
   displayWrapper: styled.div<{
     $name: string;
     $pos: Position;
-    $border: boolean;
+    $rounded: boolean;
   }>`
+    min-width: 100px;
+    min-height: 50px;
     position: absolute;
-    left: ${({ $pos }) => `${$pos.x}px`};
-    top: ${({ $pos }) => `${$pos.y}px`};
+    left: ${({ $pos }) => `${$pos.left}px`};
+    top: ${({ $pos }) => `${$pos.top}px`};
     display: inline flex;
-    border-radius: ${({ $border }) => ($border ? `16px` : '0px')};
     border: 0.5px solid #606060;
+    border-radius: ${({ $rounded }) => ($rounded ? `8px` : `0px`)};
     background: rgba(34, 34, 34, 0.7);
     flex-direction: column;
     padding: 5px;
@@ -170,30 +109,5 @@ const styles = {
     &:hover {
       color: #fff;
     }
-  `,
-  mainColumnWrapper: styled.div`
-    display: flex;
-    border-bottom: 1px solid #ededed;
-    padding-bottom: 4px;
-    margin: 2px;
-  `,
-  childColumnWrapper: styled.div`
-    display: flex;
-    margin: 2px;
-  `,
-  extraWrapper: styled.div`
-    display: flex;
-    flex-grow: 1;
-    align-items: right;
-    margin-left: 40px;
-  `,
-  pkStyle: styled.div`
-    width: 20px;
-  `,
-  fkStyle: styled.div`
-    width: 20px;
-  `,
-  nullableStyle: styled.div`
-    width: 60px;
   `,
 };
