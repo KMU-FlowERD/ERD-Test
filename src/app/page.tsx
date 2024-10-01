@@ -84,7 +84,7 @@ export default function Home() {
         from: lastTable.id,
         to: table.id,
         type: many ? 'one-to-many' : 'one-to-one',
-        identify,
+        identify: lastTable.id === table.id ? false : identify,
         multiplicity: {
           from: startNull ? 'optional' : 'mandatory',
           to: endNull ? 'optional' : 'mandatory',
@@ -111,6 +111,8 @@ export default function Home() {
 
   const tableDir: Map<ERDTable['id'], TableDirectionChild> = new Map();
 
+  const mineMapping: Map<ERDTable['id'], number> = new Map();
+
   tables.forEach((table) => {
     relations[table.id]?.forEach((relation) => {
       childTables.add(relation.to);
@@ -130,6 +132,8 @@ export default function Home() {
         ['bottom', []],
       ]),
     );
+
+    mineMapping.set(table.id, 0);
   });
 
   relationDuplicate.forEach((relation) => {
@@ -192,7 +196,7 @@ export default function Home() {
   return (
     <styles.displayWrapper onDoubleClick={displayClicked}>
       {getTable(tables, childTables, crowFoot, TableClick, onPositionChange)}
-      {getRelation(tables, relationDuplicate, tableDir, crowFoot)}
+      {getRelation(tables, relationDuplicate, tableDir, crowFoot, mineMapping)}
     </styles.displayWrapper>
   );
 }
@@ -220,6 +224,7 @@ function getRelation(
   relations: ERDRelation[],
   tableDir: Map<ERDTable['id'], TableDirectionChild>,
   crowFoot: boolean,
+  mineMapping: Map<ERDTable['id'], number>,
 ) {
   return (
     <svg
@@ -235,6 +240,7 @@ function getRelation(
           crowFoot={crowFoot}
           relation={relation}
           tableDir={tableDir}
+          mineMapping={mineMapping}
         />
       ))}
     </svg>

@@ -17,6 +17,7 @@ export function getStartEndDirection(fromTable: ERDTable, toTable: ERDTable) {
     angle,
     { width: fromTable.width, height: fromTable.height },
     { width: toTable.width, height: toTable.height },
+    fromTable.id === toTable.id,
   );
 }
 
@@ -36,6 +37,7 @@ export function getStartEndPosition(
     angle,
     { width: fromTable.width, height: fromTable.height },
     { width: toTable.width, height: toTable.height },
+    fromTable.id === toTable.id,
   );
 
   const { updatedFrom, updatedTo } = getPosition(
@@ -45,6 +47,14 @@ export function getStartEndPosition(
     toDirection,
     { fromX, fromY, toX, toY },
   );
+
+  if (fromTable.id === toTable.id)
+    return {
+      fromDirection,
+      toDirection,
+      lastFromPosition: updatedFrom,
+      lastToPosition: updatedTo,
+    };
 
   const lastFromPosition = getSortPosition(
     'from',
@@ -94,8 +104,6 @@ function getSortPosition(
           y: pos.y - size / 2 + (size / (leftCnt + 1)) * (left + 1),
         };
 
-        console.log(fromTable.id, lastPos);
-
         return lastPos;
       }
       const lastPos = {
@@ -136,6 +144,45 @@ export function getDrawLines(
   }
 
   return getHorizontalDifferentDrawLines(from, to);
+}
+
+export function getDrawLinesMineMapping(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  minHeight: number,
+  mineMappingCnt?: number,
+) {
+  const drawLines: {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  }[] = [];
+
+  const chagne = [
+    { x: from.x, y: from.y },
+    { x: from.x + 15, y: from.y },
+    {
+      x: from.x + 15,
+      y: from.y + minHeight + 15 + (mineMappingCnt ? mineMappingCnt * 15 : 0),
+    },
+    {
+      x: to.x,
+      y: from.y + minHeight + 15 + (mineMappingCnt ? mineMappingCnt * 15 : 0),
+    },
+    { x: to.x, y: to.y },
+  ];
+
+  chagne.slice(0, -1).forEach((_, i) =>
+    drawLines.push({
+      fromX: chagne[i].x,
+      fromY: chagne[i].y,
+      toX: chagne[i + 1].x,
+      toY: chagne[i + 1].y,
+    }),
+  );
+
+  return drawLines;
 }
 
 export function getStartIEOneLine(
@@ -469,13 +516,20 @@ function getDirection(
   angle: number,
   fromSize: { width: number; height: number },
   toSize: { width: number; height: number },
+  mine: boolean,
 ) {
+  let fromDirection: Direction;
+  let toDirection: Direction;
+
+  if (mine) {
+    fromDirection = 'right';
+    toDirection = 'bottom';
+    return { fromDirection, toDirection };
+  }
+
   const tanAngle = Math.tan(getRadian(angle));
   const startAspect = fromSize.height / fromSize.width;
   const endAspect = toSize.height / toSize.width;
-
-  let fromDirection: Direction;
-  let toDirection: Direction;
 
   if (angle <= 90) {
     fromDirection = tanAngle < startAspect ? 'right' : 'top';

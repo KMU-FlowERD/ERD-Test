@@ -2,6 +2,7 @@ import React, { JSX } from 'react';
 
 import {
   getDrawLines,
+  getDrawLinesMineMapping,
   getEndIDEFCircle,
   getEndIENotNullOneLine,
   getEndIENullableCircle,
@@ -27,13 +28,15 @@ export function ConnectLine({
   tables,
   relation,
   tableDir,
+  mineMapping,
 }: {
   crowFoot: boolean;
   tables: ERDTable[];
   relation: ERDRelation;
   tableDir: Map<ERDTable['id'], TableDirectionChild>;
+  mineMapping: Map<ERDTable['id'], number>;
 }) {
-  return <>{SvgComponent(crowFoot, tables, relation, tableDir)}</>;
+  return <>{SvgComponent(crowFoot, tables, relation, tableDir, mineMapping)}</>;
 }
 
 function SvgComponent(
@@ -41,6 +44,7 @@ function SvgComponent(
   tables: ERDTable[],
   relation: ERDRelation,
   tableDir: Map<ERDTable['id'], TableDirectionChild>,
+  mineMapping: Map<ERDTable['id'], number>,
 ) {
   const lines: JSX.Element[] = [];
 
@@ -48,18 +52,39 @@ function SvgComponent(
   const toTable = tables.find((t) => t.id === relation.to);
 
   if (fromTable && toTable) {
+    const navigateLines = [];
+
     const { fromDirection, toDirection, lastFromPosition, lastToPosition } =
       getStartEndPosition(fromTable, toTable, tableDir);
 
+    if (fromTable.id !== toTable.id) {
+      navigateLines.push(
+        ...getDrawLines(
+          fromDirection,
+          toDirection,
+          lastFromPosition,
+          lastToPosition,
+        ),
+      );
+    } else {
+      relation.identify = false;
+      const mineMappingCnt = mineMapping.get(fromTable.id);
+      console.log(mineMappingCnt);
+      if (mineMappingCnt !== undefined)
+        mineMapping.set(fromTable.id, mineMappingCnt + 1);
+
+      navigateLines.push(
+        ...getDrawLinesMineMapping(
+          lastFromPosition,
+          lastToPosition,
+          fromTable.height / 2,
+          mineMapping.get(fromTable.id),
+        ),
+      );
+    }
+
     const updatedFrom = lastFromPosition;
     const updatedTo = lastToPosition;
-
-    const navigateLines = getDrawLines(
-      fromDirection,
-      toDirection,
-      updatedFrom,
-      updatedTo,
-    );
 
     const drawLines = [];
     const drawCircles = [];
