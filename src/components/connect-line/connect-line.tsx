@@ -67,9 +67,7 @@ function SvgComponent(
         ),
       );
     } else {
-      relation.identify = false;
       const mineMappingCnt = mineMapping.get(fromTable.id);
-      console.log(mineMappingCnt);
       if (mineMappingCnt !== undefined)
         mineMapping.set(fromTable.id, mineMappingCnt + 1);
 
