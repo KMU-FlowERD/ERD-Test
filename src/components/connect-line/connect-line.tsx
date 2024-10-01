@@ -6,6 +6,7 @@ import {
   getEndIDEFCircle,
   getEndIENotNullOneLine,
   getEndIENullableCircle,
+  getEndIEOneLine,
   getManyLines,
   getStartEndPosition,
   getStartIDEFNullablePolygon,
@@ -93,6 +94,8 @@ function SvgComponent(
 
       if (relation.type === 'one-to-many')
         drawLines.push(...getManyLines(toDirection, updatedTo));
+      else if (relation.type === 'one-to-one')
+        drawLines.push(getEndIEOneLine(toDirection, updatedTo));
 
       if (
         relation.multiplicity &&

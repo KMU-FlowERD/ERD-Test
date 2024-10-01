@@ -161,9 +161,9 @@ export function getDrawLinesMineMapping(
 
   const chagne = [
     { x: from.x, y: from.y },
-    { x: from.x + 15, y: from.y },
+    { x: from.x + 40, y: from.y },
     {
-      x: from.x + 15,
+      x: from.x + 40,
       y: from.y + minHeight + 15 + (mineMappingCnt ? mineMappingCnt * 15 : 0),
     },
     {
@@ -215,6 +215,39 @@ export function getStartIEOneLine(
     fromY: from.y + startLineDirection[0].y,
     toX: from.x + startLineDirection[1].x,
     toY: from.y + startLineDirection[1].y,
+  };
+}
+
+export function getEndIEOneLine(
+  endDirection: Direction,
+  to: { x: number; y: number },
+) {
+  const endLine = {
+    left: [
+      { x: -5, y: -5 },
+      { x: -5, y: +5 },
+    ],
+    right: [
+      { x: +5, y: -5 },
+      { x: +5, y: +5 },
+    ],
+    top: [
+      { x: -5, y: -5 },
+      { x: +5, y: -5 },
+    ],
+    bottom: [
+      { x: -5, y: +5 },
+      { x: +5, y: +5 },
+    ],
+  };
+
+  const endLineDirection = endLine[endDirection];
+
+  return {
+    fromX: to.x + endLineDirection[0].x,
+    fromY: to.y + endLineDirection[0].y,
+    toX: to.x + endLineDirection[1].x,
+    toY: to.y + endLineDirection[1].y,
   };
 }
 
